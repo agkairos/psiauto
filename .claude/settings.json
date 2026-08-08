@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"c:/laragon/www/psiauto/.claude/agents\" \"c:/laragon/www/psiauto/.claude/skills/new-crud-module\" \"c:/laragon/www/psiauto/.claude/skills/realtime-status\" \"c:/laragon/www/psiauto/.claude/skills/tenant-scoping\")",
+      "Edit(/.claude/skills/tenant-scoping/**)",
+      "Edit(/.claude/skills/realtime-status/**)",
+      "Edit(/.claude/skills/new-crud-module/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\laragon\\www\\psiauto\\.claude"
+    ]
+  }
+}
