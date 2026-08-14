@@ -15,6 +15,7 @@ use App\Http\Controllers\Painel\MovimentacoesEstoqueController;
 use App\Http\Controllers\Painel\OrdensServicoController;
 use App\Http\Controllers\Painel\PagamentosContaPagarController;
 use App\Http\Controllers\Painel\PainelDiaController;
+use App\Http\Controllers\Painel\PedidosPecaController;
 use App\Http\Controllers\Painel\ProdutosController;
 use App\Http\Controllers\Painel\RecebimentosController;
 use App\Http\Controllers\Painel\RecursosController;
@@ -143,6 +144,16 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::delete('aplicacoes-produto/{aplicacao}', [AplicacoesProdutoController::class, 'destroy'])->name('aplicacoes-produto.destroy');
+
+    Route::prefix('pedidos-peca')->name('pedidos-peca.')->group(function () {
+        Route::get('/', [PedidosPecaController::class, 'index'])->name('index');
+        Route::post('/', [PedidosPecaController::class, 'store'])->name('store');
+        Route::post('/{pedidoPeca}/reservar', [PedidosPecaController::class, 'reservar'])->name('reservar');
+        Route::post('/{pedidoPeca}/retirar', [PedidosPecaController::class, 'retirar'])->name('retirar');
+        Route::post('/{pedidoPeca}/cancelar', [PedidosPecaController::class, 'cancelar'])->name('cancelar');
+
+        Route::put('itens/{item}', [PedidosPecaController::class, 'precificarItem'])->name('itens.precificar');
+    });
 });
 
 require __DIR__.'/auth.php';

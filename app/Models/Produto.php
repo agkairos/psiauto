@@ -20,12 +20,21 @@ class Produto extends Model
 
     public const TIPO_PERDA = 'perda';
 
+    // §12 — reserva para retirada presencial: prende o estoque sem ser uma
+    // saída definitiva ainda; "estorno" libera de volta se a reserva expira
+    // ou é cancelada antes da retirada.
+    public const TIPO_RESERVA = 'reserva';
+
+    public const TIPO_ESTORNO = 'estorno';
+
     // Sinal de cada tipo de movimentação na soma do saldo.
     public const SINAL_POR_TIPO = [
         self::TIPO_ENTRADA => 1,
         self::TIPO_SAIDA => -1,
         self::TIPO_AJUSTE => 1, // ajuste negativo se registra com quantidade negativa direto no controller
         self::TIPO_PERDA => -1,
+        self::TIPO_RESERVA => -1,
+        self::TIPO_ESTORNO => 1,
     ];
 
     protected $fillable = [
