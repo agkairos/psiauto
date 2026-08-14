@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            // Nulo até o usuário definir senha — cobre o convidado que só usa
+            // Google Auth (ver docs sobre login social) e o convite pendente.
+            $table->string('password')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

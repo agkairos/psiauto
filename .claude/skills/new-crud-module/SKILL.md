@@ -66,6 +66,9 @@ específico — este roteiro cobre só a estrutura técnica.
 - Mobile-first com Tailwind — testar em largura estreita antes de considerar
   pronto, já que o painel também roda embrulhado no app via Capacitor em telas
   menores quando aplicável.
+- Todo campo de telefone, CPF, CNPJ ou CEP usa `v-maska` com as constantes de
+  `resources/js/lib/masks.ts` — sem exceção. Ver "Máscaras de campo" no CLAUDE.md
+  (inclui a normalização correspondente no Form Request do backend).
 
 ## 8. Depois de criar
 

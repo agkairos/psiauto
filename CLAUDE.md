@@ -40,6 +40,10 @@ multiunidade, multissegmento.
 - Docker + CI/CD
 - API REST versionada em `/api/v1`, mantida em paralelo ao Inertia (app + integrações
   futuras)
+- Pagamento: Stripe (cartão) + Woovi (Pix). **Ainda não integrado** — cadastro de
+  empresa hoje libera acesso imediato (`situacao_assinatura = ativa`), sem período de
+  teste e sem cobrança real. Instalar a integração antes de abrir para clientes de
+  verdade.
 
 ## Arquitetura e convenções
 
@@ -60,6 +64,24 @@ multiunidade, multissegmento.
 - Rotas Inertia servem a web; `/api/v1` serve o app mobile e integrações — não
   duplicar regra de negócio entre os dois, extrair para Actions/Services chamados por
   ambos os controllers.
+- **Máscaras de campo são padrão obrigatório**, em todo formulário, para telefone,
+  CPF, CNPJ e CEP — sem exceção, mesmo em telas criadas rapidamente. Padrão técnico:
+  - Front: diretiva `v-maska` (pacote `maska`) com o padrão de
+    `resources/js/lib/masks.ts` (`MASCARA_CPF`, `MASCARA_CNPJ`, `MASCARA_CEP`,
+    `MASCARA_TELEFONE`, `MASCARA_CPF_CNPJ`). Não escrever regex de máscara solto
+    num componente — usar as constantes desse arquivo.
+    **Padrão único** (CPF, CNPJ, CEP): `v-maska` + `:data-maska="MASCARA_X"` — a
+    constante é uma string, o atributo HTML aceita normal.
+    **Múltiplos padrões** (telefone, CPF/CNPJ combinado — a constante é um
+    *array*): NUNCA usar `:data-maska`. Vue serializa array em atributo HTML via
+    `toString()` (`"padrao1,padrao2"`), que o maska interpreta errado e produz
+    máscara quebrada. Usar a diretiva com opções: `v-maska="{ mask: MASCARA_X }"`.
+  - Back: o valor chega mascarado no request. Normalizar em
+    `prepareForValidation()` do Form Request com `App\Support\ApenasNumeros::de()`
+    antes de validar/salvar, e guardar só dígitos no banco (`cnpj` tem 14
+    caracteres, não 18) — formatação é responsabilidade do front, nunca do dado
+    persistido. Isso evita duplicidade escapando da validação `unique` por causa de
+    pontuação diferente.
 
 ## Módulos (referência rápida)
 

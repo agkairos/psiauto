@@ -6,4 +6,29 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Identidade visual do painel — amarelo/dourado da marca (#F5BD42) */
+    --color-primary-50: #fef9ec;
+    --color-primary-100: #fdf0cb;
+    --color-primary-200: #fbe093;
+    --color-primary-300: #f9cd5c;
+    --color-primary-400: #f5bd42;
+    --color-primary-500: #eda718;
+    --color-primary-600: #d18712;
+    --color-primary-700: #ad6613;
+    --color-primary-800: #8c5116;
+    --color-primary-900: #744316;
+
+    /* Sidebar escura (ícones do painel) */
+    --color-sidebar-950: #101116;
+    --color-sidebar-900: #16171e;
+    --color-sidebar-800: #212230;
+    --color-sidebar-700: #2d2f42;
+    --color-sidebar-400: #8b8da3;
+    --color-sidebar-300: #b2b4c4;
+
+    /* Fundo cru/bege do conteúdo e superfícies de card */
+    --color-surface-50: #faf8f3;
+    --color-surface-100: #f3efe4;
+    --color-surface-200: #e8e2d2;
 }

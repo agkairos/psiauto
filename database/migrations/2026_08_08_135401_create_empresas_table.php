@@ -13,7 +13,10 @@ return new class extends Migration
 
             $table->string('razao_social');
             $table->string('nome_fantasia');
-            $table->string('cnpj', 18)->unique();
+            // Guardado só com dígitos (14 caracteres) — a formatação
+            // (00.000.000/0000-00) é aplicada no front. Ver convenção
+            // "Máscaras de campo" em CLAUDE.md.
+            $table->string('cnpj', 14)->unique();
             $table->string('email_contato')->nullable();
             $table->string('telefone_contato')->nullable();
             $table->string('logotipo_path')->nullable();
@@ -24,9 +27,11 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->text('descricao_publica')->nullable();
 
-            // §23 — situação da assinatura no plano da plataforma
-            $table->enum('situacao_assinatura', ['teste', 'ativa', 'atraso', 'cancelada'])
-                ->default('teste');
+            // §23 — situação da assinatura no plano da plataforma. Sem período de
+            // teste: nasce 'ativa' no cadastro; gateway de pagamento (Stripe +
+            // Woovi/Pix) ainda não integrado — ver CLAUDE.md.
+            $table->enum('situacao_assinatura', ['ativa', 'atraso', 'cancelada'])
+                ->default('ativa');
             $table->timestamp('aprovada_em')->nullable();
 
             $table->timestamps();

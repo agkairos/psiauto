@@ -4,7 +4,11 @@
       "Bash(mkdir -p \"c:/laragon/www/psiauto/.claude/agents\" \"c:/laragon/www/psiauto/.claude/skills/new-crud-module\" \"c:/laragon/www/psiauto/.claude/skills/realtime-status\" \"c:/laragon/www/psiauto/.claude/skills/tenant-scoping\")",
       "Edit(/.claude/skills/tenant-scoping/**)",
       "Edit(/.claude/skills/realtime-status/**)",
-      "Edit(/.claude/skills/new-crud-module/**)"
+      "Edit(/.claude/skills/new-crud-module/**)",
+      "Bash(tail -c 3000 /tmp/psiauto-debug3.log 2>&1 *)",
+      "Read(//tmp/**)",
+      "Bash(sleep 2 *)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='php.exe'\\\\\" | Select-Object ProcessId, CommandLine | Format-List\")"
     ],
     "additionalDirectories": [
       "c:\\laragon\\www\\psiauto\\.claude"

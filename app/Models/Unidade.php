@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToEmpresa;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Unidade extends Model
@@ -25,6 +26,7 @@ class Unidade extends Model
         'latitude',
         'longitude',
         'horario_funcionamento',
+        'antecedencia_minima_minutos',
         'ativa',
     ];
 
@@ -38,5 +40,10 @@ class Unidade extends Model
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
+    }
+
+    public function recursos(): HasMany
+    {
+        return $this->hasMany(Recurso::class);
     }
 }
