@@ -16,12 +16,22 @@ class SalvarFormaPagamentoRequest extends FormRequest
             : $this->user()->can('update', $formaPagamento);
     }
 
+    protected function prepareForValidation(): void
+    {
+        // Campo vazio vira null pelo ConvertEmptyStringsToNull, mas a coluna
+        // não aceita null (só tem default 0) — normaliza antes de validar.
+        $this->merge([
+            'taxa_percentual' => $this->input('taxa_percentual') ?? 0,
+            'prazo_recebimento_dias' => $this->input('prazo_recebimento_dias') ?? 0,
+        ]);
+    }
+
     public function rules(): array
     {
         return [
             'nome' => ['required', 'string', 'max:255'],
-            'taxa_percentual' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'prazo_recebimento_dias' => ['nullable', 'integer', 'min:0', 'max:365'],
+            'taxa_percentual' => ['required', 'numeric', 'min:0', 'max:100'],
+            'prazo_recebimento_dias' => ['required', 'integer', 'min:0', 'max:365'],
             'ativa' => ['boolean'],
         ];
     }
