@@ -41,7 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
             $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
 
             $semprEstilizado = in_array($status, [403, 404, 419, 429], true);
-            $so500ForaDeDev = $status >= 500 && ! app()->environment(['local', 'testing']);
+            // Com APP_DEBUG=true (mesmo em produção), deixa o Whoops mostrar
+            // o stack trace de verdade em vez de esconder atrás da página
+            // estilizada — senão fica impossível depurar um 500 remoto.
+            $so500ForaDeDev = $status >= 500 && ! app()->environment(['local', 'testing']) && ! config('app.debug');
 
             if (! $semprEstilizado && ! $so500ForaDeDev) {
                 return null;
