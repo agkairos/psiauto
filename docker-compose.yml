@@ -1,7 +1,7 @@
-# Só os serviços da aplicação — MySQL e Redis vivem na stack compartilhada
-# "infra" (ver infra/docker-compose.yml), criada uma vez na VPS e usada por
-# todos os projetos. Este compose só entra na rede "infra" pra alcançá-los
-# pelos hostnames mysql/redis.
+# Serviços da aplicação. MySQL e Redis NÃO ficam aqui — são recursos nativos
+# do Dokploy (tipo "Database"), criados dentro do mesmo Project pela
+# interface, e o Dokploy já coloca tudo na mesma rede automaticamente. Este
+# compose só precisa do host/porta deles, passados via .env.
 
 services:
   app:
@@ -13,8 +13,6 @@ services:
       - "80"
     volumes:
       - storage:/app/storage
-    networks:
-      - infra
 
   worker:
     build: .
@@ -24,8 +22,6 @@ services:
     env_file: .env
     volumes:
       - storage:/app/storage
-    networks:
-      - infra
 
   scheduler:
     build: .
@@ -35,8 +31,6 @@ services:
     env_file: .env
     volumes:
       - storage:/app/storage
-    networks:
-      - infra
 
   reverb:
     build: .
@@ -46,12 +40,6 @@ services:
     env_file: .env
     ports:
       - "8080"
-    networks:
-      - infra
-
-networks:
-  infra:
-    external: true
 
 volumes:
   storage:
