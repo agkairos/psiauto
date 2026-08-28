@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1
 
 # ---- Stage 1: assets (Vite build) ----
-FROM node:20-alpine AS assets
+FROM oven/bun:1-alpine AS assets
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN bun run build
 
 # ---- Stage 2: dependências PHP (composer) ----
 FROM composer:2 AS vendor
