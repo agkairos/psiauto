@@ -29,6 +29,12 @@ class SalvarRecursoRequest extends FormRequest
 
         $regras = [
             'nome' => ['required', 'string', 'max:255'],
+            'tipo' => ['required', Rule::in([Recurso::TIPO_ESPACO, Recurso::TIPO_PESSOA])],
+            'user_id' => [
+                'nullable',
+                'prohibited_unless:tipo,'.Recurso::TIPO_PESSOA,
+                Rule::exists('users', 'id')->where('empresa_id', $empresaId),
+            ],
             'unidade_id' => [
                 'required',
                 Rule::exists('unidades', 'id')->where('empresa_id', $empresaId),

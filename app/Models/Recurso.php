@@ -14,10 +14,16 @@ class Recurso extends Model
 {
     use BelongsToEmpresa, HasFactory, SoftDeletes;
 
+    public const TIPO_ESPACO = 'espaco';
+
+    public const TIPO_PESSOA = 'pessoa';
+
     protected $fillable = [
         'empresa_id',
         'unidade_id',
         'nome',
+        'tipo',
+        'user_id',
         'grade_semanal',
         'ativo',
     ];
@@ -35,6 +41,11 @@ class Recurso extends Model
     public function unidade(): BelongsTo
     {
         return $this->belongsTo(Unidade::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function servicos(): BelongsToMany

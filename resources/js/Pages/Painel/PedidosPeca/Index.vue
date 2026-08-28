@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import PainelLayout from '@/Layouts/PainelLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import ClienteBusca from '@/Components/ClienteBusca.vue';
 import { PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
 interface Produto {
@@ -59,7 +60,6 @@ interface Paginado<T> {
 const props = defineProps<{
     pedidos: Paginado<Pedido>;
     unidades: Unidade[];
-    clientes: Cliente[];
     produtos: Produto[];
 }>();
 
@@ -112,14 +112,17 @@ const form = useForm({
     itens: [{ descricao: '', produto_id: null as number | null, quantidade: 1 }],
 });
 
-const veiculosDoCliente = computed(() => {
-    const cliente = props.clientes.find((c) => c.id === form.cliente_id);
-    return cliente?.veiculos ?? [];
-});
+const veiculosDoCliente = ref<Veiculo[]>([]);
+
+function aoSelecionarCliente(cliente: Cliente | null) {
+    veiculosDoCliente.value = cliente?.veiculos ?? [];
+    form.veiculo_id = null;
+}
 
 function abrirCriacao() {
     form.reset();
     form.itens = [{ descricao: '', produto_id: null, quantidade: 1 }];
+    veiculosDoCliente.value = [];
     modalCriarAberto.value = true;
 }
 
@@ -369,15 +372,7 @@ function cancelar(pedido: Pedido) {
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-sidebar-900">Cliente</label>
-                        <select
-                            v-model="form.cliente_id"
-                            required
-                            class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
-                            @change="form.veiculo_id = null"
-                        >
-                            <option :value="null" disabled>Selecione…</option>
-                            <option v-for="c in clientes" :key="c.id" :value="c.id">{{ c.nome }}</option>
-                        </select>
+                        <ClienteBusca v-model="form.cliente_id" @select="aoSelecionarCliente" />
                     </div>
                 </div>
 

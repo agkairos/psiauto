@@ -5,6 +5,7 @@ import PainelLayout from '@/Layouts/PainelLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { PlusIcon } from '@heroicons/vue/24/outline';
 import { MASCARA_CEP } from '@/lib/masks';
+import { UFS } from '@/lib/ufs';
 
 interface Unidade {
     id: number;
@@ -65,6 +66,38 @@ function abrirEdicao(unidade: Unidade) {
 function fecharModal() {
     modalAberto.value = false;
     unidadeEmEdicao.value = null;
+}
+
+// Preenchimento automático de endereço pelo CEP (ViaCEP — API pública, sem
+// chave). Só dispara quando o CEP tem os 8 dígitos completos.
+const buscandoCep = ref(false);
+const erroCep = ref('');
+
+async function buscarEnderecoPeloCep() {
+    const digitos = form.cep.replace(/\D/g, '');
+    erroCep.value = '';
+
+    if (digitos.length !== 8) return;
+
+    buscandoCep.value = true;
+    try {
+        const resposta = await fetch(`https://viacep.com.br/ws/${digitos}/json/`);
+        const dados = await resposta.json();
+
+        if (dados.erro) {
+            erroCep.value = 'CEP não encontrado.';
+            return;
+        }
+
+        form.logradouro = dados.logradouro || form.logradouro;
+        form.bairro = dados.bairro || form.bairro;
+        form.cidade = dados.localidade || form.cidade;
+        form.uf = dados.uf || form.uf;
+    } catch {
+        erroCep.value = 'Não foi possível buscar o CEP agora — preencha manualmente.';
+    } finally {
+        buscandoCep.value = false;
+    }
 }
 
 function salvar() {
@@ -182,19 +215,22 @@ function remover(unidade: Unidade) {
                                     type="text"
                                     placeholder="00000-000"
                                     class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-400/30"
+                                    @blur="buscarEnderecoPeloCep"
                                 />
+                                <p v-if="buscandoCep" class="mt-1 text-xs text-sidebar-800/60">Buscando endereço…</p>
+                                <p v-else-if="erroCep" class="mt-1 text-xs text-amber-600">{{ erroCep }}</p>
                                 <p v-if="form.errors.cep" class="mt-1 text-xs text-red-600">{{ form.errors.cep }}</p>
                             </div>
 
                             <div>
                                 <label class="mb-1 block text-sm font-medium text-sidebar-900">UF</label>
-                                <input
+                                <select
                                     v-model="form.uf"
-                                    type="text"
-                                    maxlength="2"
-                                    placeholder="SP"
-                                    class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm uppercase outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-400/30"
-                                />
+                                    class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-400/30"
+                                >
+                                    <option value="">Selecione</option>
+                                    <option v-for="uf in UFS" :key="uf.sigla" :value="uf.sigla">{{ uf.sigla }} — {{ uf.nome }}</option>
+                                </select>
                             </div>
                         </div>
 

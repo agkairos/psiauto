@@ -1,0 +1,14 @@
+{
+	frankenphp
+	order php_server before file_server
+}
+
+:80 {
+	root * /app/public
+	encode gzip
+
+	@blocked path /.env* /storage/logs/* /vendor/*
+	respond @blocked 404
+
+	php_server
+}

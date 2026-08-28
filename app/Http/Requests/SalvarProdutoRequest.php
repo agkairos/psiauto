@@ -29,6 +29,7 @@ class SalvarProdutoRequest extends FormRequest
             ],
             'codigo_barras' => ['nullable', 'string', 'max:255'],
             'nome' => ['required', 'string', 'max:255'],
+            'categoria_id' => ['nullable', Rule::exists('produto_categorias', 'id')->where('empresa_id', $empresaId)],
             'marca' => ['nullable', 'string', 'max:255'],
             'unidade_medida' => ['nullable', 'string', 'max:10'],
             'custo' => ['nullable', 'numeric', 'min:0'],

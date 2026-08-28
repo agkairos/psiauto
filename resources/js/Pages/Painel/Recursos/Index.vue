@@ -28,9 +28,16 @@ interface Intervalo {
     fim: string;
 }
 
+interface Tecnico {
+    id: number;
+    name: string;
+}
+
 interface Recurso {
     id: number;
     nome: string;
+    tipo: 'espaco' | 'pessoa';
+    user: Tecnico | null;
     unidade: Unidade | null;
     servicos: Servico[];
     bloqueios: Bloqueio[];
@@ -46,6 +53,7 @@ const props = defineProps<{
     recursos: Recurso[];
     unidades: Unidade[];
     servicos: Servico[];
+    tecnicos: Tecnico[];
 }>();
 
 const page = usePage();
@@ -93,10 +101,20 @@ const gradeForm = ref(gradeVazia());
 
 const form = useForm({
     nome: '',
+    tipo: 'espaco' as 'espaco' | 'pessoa',
+    user_id: null as number | null,
     unidade_id: null as number | null,
     servicos: [] as number[],
     ativo: true,
 });
+
+// Posto-pessoa vinculado a um técnico: nome vem do usuário, campo fica
+// só-leitura pra não divergir do nome de login.
+function aoTrocarTecnico() {
+    if (form.tipo !== 'pessoa' || form.user_id === null) return;
+    const tecnico = props.tecnicos.find((t) => t.id === form.user_id);
+    if (tecnico) form.nome = tecnico.name;
+}
 
 const buscaServico = ref('');
 
@@ -110,6 +128,8 @@ const servicosFiltrados = computed(() => {
 function abrirCriacao() {
     recursoEmEdicao.value = null;
     form.reset();
+    form.tipo = 'espaco';
+    form.user_id = null;
     form.ativo = true;
     gradeForm.value = gradeVazia();
     buscaServico.value = '';
@@ -119,6 +139,8 @@ function abrirCriacao() {
 function abrirEdicao(recurso: Recurso) {
     recursoEmEdicao.value = recurso;
     form.nome = recurso.nome;
+    form.tipo = recurso.tipo;
+    form.user_id = recurso.user?.id ?? null;
     form.unidade_id = recurso.unidade?.id ?? null;
     form.servicos = recurso.servicos.map((s) => s.id);
     form.ativo = recurso.ativo;
@@ -159,7 +181,7 @@ function salvar() {
 }
 
 function remover(recurso: Recurso) {
-    if (!confirm(`Remover o recurso "${recurso.nome}"? Isso não pode ser desfeito.`)) {
+    if (!confirm(`Remover o posto "${recurso.nome}"? Isso não pode ser desfeito.`)) {
         return;
     }
 
@@ -203,14 +225,14 @@ function removerBloqueio(bloqueio: Bloqueio) {
 </script>
 
 <template>
-    <Head title="Recursos e escala" />
+    <Head title="Postos de atendimento" />
 
     <PainelLayout>
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-xl font-semibold text-sidebar-900">Recursos e escala</h1>
+                <h1 class="text-xl font-semibold text-sidebar-900">Postos de atendimento e escala</h1>
                 <p class="mt-1 text-sm text-sidebar-800/60">
-                    Recursos de atendimento (elevador, box, cabine, mecânico) e a grade de cada um.
+                    Espaços (elevador, box, cabine) e pessoas (mecânico) que atendem um carro por vez, e a grade de cada um.
                 </p>
             </div>
 
@@ -220,7 +242,7 @@ function removerBloqueio(bloqueio: Bloqueio) {
                 @click="abrirCriacao"
             >
                 <PlusIcon class="h-4 w-4" />
-                Novo recurso
+                Novo posto
             </button>
         </div>
 
@@ -239,7 +261,15 @@ function removerBloqueio(bloqueio: Bloqueio) {
             >
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="font-medium text-sidebar-900">{{ recurso.nome }}</p>
+                        <p class="font-medium text-sidebar-900">
+                            {{ recurso.nome }}
+                            <span
+                                class="ml-1 rounded px-1.5 py-0.5 text-[10px] font-medium"
+                                :class="recurso.tipo === 'pessoa' ? 'bg-blue-50 text-blue-700' : 'bg-surface-200 text-sidebar-800/60'"
+                            >
+                                {{ recurso.tipo === 'pessoa' ? 'Pessoa' : 'Espaço' }}
+                            </span>
+                        </p>
                         <p class="mt-1 text-xs text-sidebar-800/60">{{ recurso.unidade?.nome ?? '—' }}</p>
                     </div>
                     <span
@@ -266,18 +296,55 @@ function removerBloqueio(bloqueio: Bloqueio) {
             </div>
 
             <p v-if="props.recursos.length === 0" class="text-sm text-sidebar-800/60">
-                Nenhum recurso cadastrado ainda.
+                Nenhum posto de atendimento cadastrado ainda.
             </p>
         </div>
 
         <!-- Modal: criar / editar -->
         <Modal
             :open="modalAberto"
-            :titulo="recursoEmEdicao ? 'Editar recurso' : 'Novo recurso'"
+            :titulo="recursoEmEdicao ? 'Editar posto de atendimento' : 'Novo posto de atendimento'"
             max-width="xl"
             @close="fecharModal"
         >
             <form class="space-y-5" @submit.prevent="salvar">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-sidebar-900">Tipo</label>
+                            <div class="flex gap-2">
+                                <button
+                                    type="button"
+                                    class="flex-1 rounded-lg border py-2 text-sm font-medium"
+                                    :class="form.tipo === 'espaco' ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-surface-200 text-sidebar-800'"
+                                    @click="form.tipo = 'espaco'; form.user_id = null"
+                                >
+                                    Espaço (box, elevador, cabine…)
+                                </button>
+                                <button
+                                    type="button"
+                                    class="flex-1 rounded-lg border py-2 text-sm font-medium"
+                                    :class="form.tipo === 'pessoa' ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-surface-200 text-sidebar-800'"
+                                    @click="form.tipo = 'pessoa'"
+                                >
+                                    Pessoa (mecânico)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="form.tipo === 'pessoa'">
+                            <label class="mb-1 block text-sm font-medium text-sidebar-900">Técnico (opcional)</label>
+                            <select
+                                v-model="form.user_id"
+                                class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-400/30"
+                                @change="aoTrocarTecnico"
+                            >
+                                <option :value="null">Nenhum — sem login no sistema</option>
+                                <option v-for="t in tecnicos" :key="t.id" :value="t.id">{{ t.name }}</option>
+                            </select>
+                            <p class="mt-1 text-xs text-sidebar-800/60">
+                                Vincular a um usuário técnico já cadastrado preenche o nome sozinho e evita duplicar o cadastro.
+                            </p>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="mb-1 block text-sm font-medium text-sidebar-900">Nome</label>
@@ -285,6 +352,8 @@ function removerBloqueio(bloqueio: Bloqueio) {
                                     v-model="form.nome"
                                     type="text"
                                     required
+                                    :readonly="form.tipo === 'pessoa' && form.user_id !== null"
+                                    :class="form.tipo === 'pessoa' && form.user_id !== null ? 'bg-surface-100 text-sidebar-800/70' : ''"
                                     placeholder="Elevador 1, Box 2…"
                                     class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-400/30"
                                 />
@@ -310,7 +379,7 @@ function removerBloqueio(bloqueio: Bloqueio) {
                         <div>
                             <div class="mb-2 flex items-center justify-between">
                                 <label class="block text-sm font-medium text-sidebar-900">
-                                    Serviços atendidos por este recurso
+                                    Serviços atendidos por este posto
                                 </label>
                                 <span class="text-xs text-sidebar-800/50">{{ form.servicos.length }} selecionado(s)</span>
                             </div>
@@ -419,7 +488,7 @@ function removerBloqueio(bloqueio: Bloqueio) {
 
                         <label v-if="recursoEmEdicao" class="flex items-center gap-2 text-sm text-sidebar-800/80">
                             <input v-model="form.ativo" type="checkbox" class="rounded border-surface-200" />
-                            Recurso ativo
+                            Posto ativo
                         </label>
 
                         <div class="flex gap-2">

@@ -4,6 +4,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import PainelLayout from '@/Layouts/PainelLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '@heroicons/vue/24/outline';
+import ClienteBusca from '@/Components/ClienteBusca.vue';
 
 interface Unidade {
     id: number;
@@ -66,7 +67,6 @@ const props = defineProps<{
     unidades: Unidade[];
     recursos: Recurso[];
     agendamentos: Agendamento[];
-    clientes: Cliente[];
     servicos: Servico[];
 }>();
 
@@ -213,14 +213,17 @@ const form = useForm({
     observacoes_cliente: '',
 });
 
-const veiculosDoClienteSelecionado = computed(() => {
-    const cliente = props.clientes.find((c) => c.id === form.cliente_id);
-    return cliente?.veiculos ?? [];
-});
+const veiculosDoClienteSelecionado = ref<Veiculo[]>([]);
+
+function aoSelecionarCliente(cliente: Cliente | null) {
+    veiculosDoClienteSelecionado.value = cliente?.veiculos ?? [];
+    form.veiculo_id = null;
+}
 
 function abrirCriacao(recursoId?: number, minutoSlot?: number) {
     form.reset();
     form.data_agendamento = props.data;
+    veiculosDoClienteSelecionado.value = [];
     if (recursoId) form.recurso_id = recursoId;
     if (minutoSlot !== undefined) form.hora_inicio = horaDe(minutoSlot);
     modalCriarAberto.value = true;
@@ -283,7 +286,7 @@ function cancelar(agendamento: Agendamento) {
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h1 class="text-xl font-semibold text-sidebar-900">Agendamentos</h1>
-                <p class="mt-1 text-sm text-sidebar-800/60">Agenda do dia por recurso.</p>
+                <p class="mt-1 text-sm text-sidebar-800/60">Agenda do dia por posto de atendimento.</p>
             </div>
 
             <button
@@ -329,7 +332,7 @@ function cancelar(agendamento: Agendamento) {
         </div>
 
         <div v-if="recursos.length === 0" class="mt-6 text-sm text-sidebar-800/60">
-            Nenhum recurso ativo nessa unidade. Cadastre em Recursos e escala.
+            Nenhum posto ativo nessa unidade. Cadastre em Postos e escala.
         </div>
 
         <!--
@@ -409,15 +412,7 @@ function cancelar(agendamento: Agendamento) {
             <form class="space-y-4" @submit.prevent="salvarNovo">
                 <div>
                     <label class="mb-1 block text-sm font-medium text-sidebar-900">Cliente</label>
-                    <select
-                        v-model="form.cliente_id"
-                        required
-                        class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
-                        @change="form.veiculo_id = null"
-                    >
-                        <option :value="null" disabled>Selecione</option>
-                        <option v-for="c in clientes" :key="c.id" :value="c.id">{{ c.nome }}</option>
-                    </select>
+                    <ClienteBusca v-model="form.cliente_id" @select="aoSelecionarCliente" />
                     <p v-if="form.errors.cliente_id" class="mt-1 text-xs text-red-600">{{ form.errors.cliente_id }}</p>
                 </div>
 
@@ -456,7 +451,7 @@ function cancelar(agendamento: Agendamento) {
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-sidebar-900">Recurso</label>
+                    <label class="mb-1 block text-sm font-medium text-sidebar-900">Posto de atendimento</label>
                     <select
                         v-model="form.recurso_id"
                         required

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SalvarProdutoRequest;
 use App\Models\Marca;
 use App\Models\Produto;
+use App\Models\ProdutoCategoria;
 use App\Models\Unidade;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class ProdutosController extends Controller
                 'movimentacoes' => fn ($q) => $q->where('unidade_id', $unidadeId),
                 'aplicacoes.marca:id,nome',
                 'aplicacoes.modelo:id,nome',
+                'categoria:id,nome',
             ])
             ->orderBy('nome')
             ->get()
@@ -43,6 +45,7 @@ class ProdutosController extends Controller
             'unidades' => $unidades,
             'unidadeId' => $unidadeId,
             'marcas' => Marca::query()->where('tipo_veiculo', 'carro')->orderBy('nome')->get(['id', 'nome']),
+            'categorias' => ProdutoCategoria::query()->where('ativa', true)->orderBy('nome')->get(['id', 'nome']),
         ]);
     }
 

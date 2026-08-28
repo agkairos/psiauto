@@ -47,7 +47,7 @@ interface SharedProps {
 const todosNavItems: NavItem[] = [
     { label: 'Painel', href: route('dashboard'), icon: HomeIcon },
     { label: 'Agendamentos', href: route('agendamentos.index'), icon: CalendarIcon, permissao: 'agendamentos.ver' },
-    { label: 'Recursos e escala', href: route('recursos.index'), icon: CalendarDaysIcon, permissao: 'agenda.gerenciar' },
+    { label: 'Postos e escala', href: route('recursos.index'), icon: CalendarDaysIcon, permissao: 'agenda.gerenciar' },
     { label: 'Painel do dia', href: route('painel-dia.index'), icon: ViewColumnsIcon, permissao: 'agendamentos.ver' },
     { label: 'Ordens de serviço', href: route('ordens-servico.index'), icon: WrenchScrewdriverIcon, permissao: 'os.ver' },
     { label: 'Serviços', href: route('servicos.index'), icon: TagIcon, permissao: 'servicos.ver' },

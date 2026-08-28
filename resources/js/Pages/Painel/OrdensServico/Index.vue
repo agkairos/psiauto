@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import PainelLayout from '@/Layouts/PainelLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import ClienteBusca from '@/Components/ClienteBusca.vue';
 import { PlusIcon } from '@heroicons/vue/24/outline';
 
 interface Unidade {
@@ -76,6 +77,7 @@ interface OrdemServico {
     veiculo: { id: number; placa: string; marca: MarcaModelo; modelo: MarcaModelo };
     unidade: { id: number; nome: string };
     itens: ItemOrcamento[];
+    agendamento: { id: number; recurso: { id: number; tipo: string; user: { id: number; name: string } | null } | null } | null;
 }
 
 interface Paginado<T> {
@@ -107,7 +109,6 @@ const props = defineProps<{
     ordens: Paginado<OrdemServico>;
     agendamentosRecebidos: AgendamentoRecebido[];
     unidades: Unidade[];
-    clientes: Cliente[];
     servicos: ServicoResumo[];
     formasPagamento: FormaPagamento[];
     produtos: ProdutoResumo[];
@@ -135,10 +136,12 @@ const form = useForm({
     checklist_entrada: checklistVazio(),
 });
 
-const veiculosDoClienteSelecionado = computed(() => {
-    const cliente = props.clientes.find((c) => c.id === form.cliente_id);
-    return cliente?.veiculos ?? [];
-});
+const veiculosDoClienteSelecionado = ref<Veiculo[]>([]);
+
+function aoSelecionarCliente(cliente: Cliente | null) {
+    veiculosDoClienteSelecionado.value = cliente?.veiculos ?? [];
+    form.veiculo_id = null;
+}
 
 function abrirDeAgendamento(agendamento: AgendamentoRecebido) {
     osEmEdicao.value = null;
@@ -155,6 +158,7 @@ function abrirAvulsa() {
     osEmEdicao.value = null;
     form.reset();
     form.checklist_entrada = checklistVazio();
+    veiculosDoClienteSelecionado.value = [];
     modalAberto.value = true;
 }
 
@@ -163,6 +167,12 @@ function abrirEdicao(os: OrdemServico) {
     form.reclamacao_cliente = os.reclamacao_cliente ?? '';
     form.diagnostico_tecnico = os.diagnostico_tecnico ?? '';
     form.checklist_entrada = os.checklist_entrada ? { ...checklistVazio(), ...os.checklist_entrada } : checklistVazio();
+
+    // §04/§07 — se o agendamento tem um posto-pessoa vinculado a um técnico,
+    // já sugere ele como responsável do próximo item (editável).
+    const tecnicoDoPosto = os.agendamento?.recurso?.user ?? null;
+    formItem.responsavel_id = tecnicoDoPosto?.id ?? null;
+
     modalAberto.value = true;
 }
 
@@ -465,15 +475,7 @@ function confirmarEntrega() {
 
                         <div>
                             <label class="mb-1 block text-sm font-medium text-sidebar-900">Cliente</label>
-                            <select
-                                v-model="form.cliente_id"
-                                required
-                                class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
-                                @change="form.veiculo_id = null"
-                            >
-                                <option :value="null" disabled>Selecione</option>
-                                <option v-for="c in clientes" :key="c.id" :value="c.id">{{ c.nome }}</option>
-                            </select>
+                            <ClienteBusca v-model="form.cliente_id" @select="aoSelecionarCliente" />
                             <p v-if="form.errors.cliente_id" class="mt-1 text-xs text-red-600">{{ form.errors.cliente_id }}</p>
                         </div>
 

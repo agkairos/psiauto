@@ -6,7 +6,6 @@ use App\Actions\PedidosPeca\EstornarReservaDoPedido;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PrecificarPedidoPecaItemRequest;
 use App\Http\Requests\SalvarPedidoPecaRequest;
-use App\Models\Cliente;
 use App\Models\PedidoPeca;
 use App\Models\PedidoPecaItem;
 use App\Models\Produto;
@@ -38,10 +37,6 @@ class PedidosPecaController extends Controller
         return Inertia::render('Painel/PedidosPeca/Index', [
             'pedidos' => $pedidos,
             'unidades' => Unidade::query()->orderBy('nome')->get(['id', 'nome']),
-            'clientes' => Cliente::query()->where('ativo', true)
-                ->with('veiculos:id,cliente_id,placa')
-                ->orderBy('nome')
-                ->get(['id', 'nome']),
             'produtos' => Produto::query()->where('ativo', true)->orderBy('nome')->get(['id', 'nome']),
         ]);
     }

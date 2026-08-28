@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AbrirOrdemServicoRequest;
 use App\Http\Requests\AtualizarOrdemServicoRequest;
 use App\Models\Agendamento;
-use App\Models\Cliente;
 use App\Models\FormaPagamento;
 use App\Models\OrdemServico;
 use App\Models\Produto;
@@ -39,6 +38,9 @@ class OrdensServicoController extends Controller
                 'itens.servico:id,nome',
                 'itens.aprovadoPor:id,name',
                 'itens.responsavel:id,name',
+                // §04/§07 — se a OS nasceu de um agendamento com um posto-pessoa
+                // vinculado a um técnico, pré-preenche o responsável do item.
+                'agendamento.recurso.user:id,name',
             ])
             ->orderByDesc('created_at')
             ->paginate(20);
@@ -55,7 +57,6 @@ class OrdensServicoController extends Controller
             'ordens' => $ordens,
             'agendamentosRecebidos' => $agendamentosRecebidos,
             'unidades' => Unidade::query()->select('id', 'nome')->orderBy('nome')->get(),
-            'clientes' => Cliente::query()->where('ativo', true)->with('veiculos.marca:id,nome', 'veiculos.modelo:id,nome')->orderBy('nome')->get(['id', 'nome']),
             'servicos' => Servico::query()->where('ativo', true)->orderBy('nome')->get(['id', 'nome', 'preco']),
             'formasPagamento' => FormaPagamento::query()->where('ativa', true)->orderBy('nome')->get(['id', 'nome']),
             'produtos' => Produto::query()->where('ativo', true)->orderBy('nome')->get(['id', 'nome', 'preco_venda', 'unidade_medida']),

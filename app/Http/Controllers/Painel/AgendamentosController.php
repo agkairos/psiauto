@@ -6,7 +6,6 @@ use App\Events\AgendamentoStatusAlterado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SalvarAgendamentoRequest;
 use App\Models\Agendamento;
-use App\Models\Cliente;
 use App\Models\Recurso;
 use App\Models\Servico;
 use App\Models\Unidade;
@@ -53,7 +52,6 @@ class AgendamentosController extends Controller
             'unidades' => Unidade::query()->select('id', 'nome')->orderBy('nome')->get(),
             'recursos' => $recursos,
             'agendamentos' => $agendamentos,
-            'clientes' => Cliente::query()->where('ativo', true)->with('veiculos.marca:id,nome', 'veiculos.modelo:id,nome')->orderBy('nome')->get(['id', 'nome']),
             'servicos' => Servico::query()->where('ativo', true)->orderBy('nome')->get(['id', 'nome', 'tempo_execucao_minutos']),
         ]);
     }

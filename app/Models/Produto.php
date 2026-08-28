@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToEmpresa;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -39,6 +40,7 @@ class Produto extends Model
 
     protected $fillable = [
         'empresa_id',
+        'categoria_id',
         'codigo',
         'codigo_barras',
         'nome',
@@ -60,6 +62,11 @@ class Produto extends Model
         'visivel_para_cliente' => 'boolean',
         'ativo' => 'boolean',
     ];
+
+    public function categoria(): BelongsTo
+    {
+        return $this->belongsTo(ProdutoCategoria::class, 'categoria_id');
+    }
 
     public function movimentacoes(): HasMany
     {

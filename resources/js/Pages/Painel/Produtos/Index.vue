@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import PainelLayout from '@/Layouts/PainelLayout.vue';
 import Modal from '@/Components/Modal.vue';
-import { PlusIcon } from '@heroicons/vue/24/outline';
+import { PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
 interface Unidade {
     id: number;
@@ -28,12 +28,19 @@ interface Aplicacao {
     ano_fim: number | null;
 }
 
+interface Categoria {
+    id: number;
+    nome: string;
+    ativa?: boolean;
+}
+
 interface Produto {
     id: number;
     codigo: string | null;
     codigo_barras: string | null;
     nome: string;
     marca: string | null;
+    categoria: Categoria | null;
     unidade_medida: string;
     custo: string;
     preco_venda: string;
@@ -49,6 +56,7 @@ const props = defineProps<{
     unidades: Unidade[];
     unidadeId: number | null;
     marcas: Marca[];
+    categorias: Categoria[];
 }>();
 
 const page = usePage();
@@ -71,6 +79,7 @@ const form = useForm({
     codigo_barras: '',
     nome: '',
     marca: '',
+    categoria_id: null as number | null,
     unidade_medida: 'un',
     custo: '',
     preco_venda: '',
@@ -93,6 +102,7 @@ function abrirEdicao(produto: Produto) {
     form.codigo_barras = produto.codigo_barras ?? '';
     form.nome = produto.nome;
     form.marca = produto.marca ?? '';
+    form.categoria_id = produto.categoria?.id ?? null;
     form.unidade_medida = produto.unidade_medida;
     form.custo = produto.custo;
     form.preco_venda = produto.preco_venda;
@@ -189,6 +199,43 @@ function removerAplicacao(aplicacao: Aplicacao) {
         onSuccess: () => resincronizarProdutoEmEdicao(),
     });
 }
+
+// Gerenciar categorias — cada estabelecimento define as suas
+const modalCategoriasAberto = ref(false);
+const categoriaEmEdicao = ref<Categoria | null>(null);
+const formCategoria = useForm({ nome: '', ativa: true });
+
+function abrirGerenciarCategorias() {
+    categoriaEmEdicao.value = null;
+    formCategoria.reset();
+    formCategoria.ativa = true;
+    modalCategoriasAberto.value = true;
+}
+
+function editarCategoria(categoria: Categoria) {
+    categoriaEmEdicao.value = categoria;
+    formCategoria.nome = categoria.nome;
+    formCategoria.ativa = categoria.ativa ?? true;
+}
+
+function salvarCategoria() {
+    const onSuccess = () => {
+        formCategoria.reset();
+        formCategoria.ativa = true;
+        categoriaEmEdicao.value = null;
+    };
+
+    if (categoriaEmEdicao.value) {
+        formCategoria.put(route('produto-categorias.update', categoriaEmEdicao.value.id), { preserveScroll: true, onSuccess });
+    } else {
+        formCategoria.post(route('produto-categorias.store'), { preserveScroll: true, onSuccess });
+    }
+}
+
+function removerCategoria(categoria: Categoria) {
+    if (!confirm(`Remover a categoria "${categoria.nome}"? Produtos nela ficam sem categoria.`)) return;
+    router.delete(route('produto-categorias.destroy', categoria.id), { preserveScroll: true });
+}
 </script>
 
 <template>
@@ -209,6 +256,14 @@ function removerAplicacao(aplicacao: Aplicacao) {
                 >
                     <option v-for="u in unidades" :key="u.id" :value="u.id">{{ u.nome }}</option>
                 </select>
+
+                <button
+                    type="button"
+                    class="rounded-lg border border-surface-200 px-3 py-2 text-sm font-medium text-sidebar-800 hover:bg-surface-50"
+                    @click="abrirGerenciarCategorias"
+                >
+                    Categorias
+                </button>
 
                 <button
                     type="button"
@@ -244,6 +299,7 @@ function removerAplicacao(aplicacao: Aplicacao) {
                             <p class="font-medium text-sidebar-900">{{ produto.nome }}</p>
                             <p class="text-xs text-sidebar-800/60">
                                 {{ produto.marca }}<span v-if="produto.codigo"> · Cód. {{ produto.codigo }}</span>
+                                <span v-if="produto.categoria"> · {{ produto.categoria.nome }}</span>
                             </p>
                         </td>
                         <td class="px-4 py-3">
@@ -304,6 +360,17 @@ function removerAplicacao(aplicacao: Aplicacao) {
                             class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
                         />
                     </div>
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-sidebar-900">Categoria</label>
+                    <select
+                        v-model="form.categoria_id"
+                        class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
+                    >
+                        <option :value="null">Sem categoria</option>
+                        <option v-for="c in categorias" :key="c.id" :value="c.id">{{ c.nome }}</option>
+                    </select>
                 </div>
 
                 <div class="grid grid-cols-3 gap-3">
@@ -513,6 +580,57 @@ function removerAplicacao(aplicacao: Aplicacao) {
                     </form>
                 </div>
             </div>
+        </Modal>
+
+        <!-- Modal: gerenciar categorias -->
+        <Modal :open="modalCategoriasAberto" titulo="Categorias de produto" @close="modalCategoriasAberto = false">
+            <form class="mb-4 flex items-end gap-2 rounded-lg border border-surface-200 p-3" @submit.prevent="salvarCategoria">
+                <div class="flex-1">
+                    <label class="mb-1 block text-sm font-medium text-sidebar-900">
+                        {{ categoriaEmEdicao ? 'Editar categoria' : 'Nova categoria' }}
+                    </label>
+                    <input
+                        v-model="formCategoria.nome"
+                        type="text"
+                        required
+                        placeholder="Ex: Filtros, Freios, Lubrificantes…"
+                        class="w-full rounded-lg border border-surface-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
+                    />
+                    <p v-if="formCategoria.errors.nome" class="mt-1 text-xs text-red-600">{{ formCategoria.errors.nome }}</p>
+                </div>
+                <button
+                    type="submit"
+                    :disabled="formCategoria.processing"
+                    class="rounded-lg bg-primary-400 px-4 py-2 text-sm font-semibold text-sidebar-950 hover:opacity-90 disabled:opacity-50"
+                >
+                    {{ categoriaEmEdicao ? 'Salvar' : 'Adicionar' }}
+                </button>
+                <button
+                    v-if="categoriaEmEdicao"
+                    type="button"
+                    class="rounded-lg border border-surface-200 px-3 py-2 text-sm font-medium text-sidebar-800 hover:bg-surface-50"
+                    @click="categoriaEmEdicao = null; formCategoria.reset(); formCategoria.ativa = true"
+                >
+                    Cancelar
+                </button>
+            </form>
+
+            <ul class="divide-y divide-surface-100">
+                <li v-for="categoria in categorias" :key="categoria.id" class="flex items-center justify-between py-2">
+                    <span class="text-sm text-sidebar-900">{{ categoria.nome }}</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" class="text-xs font-medium text-primary-600 hover:underline" @click="editarCategoria(categoria)">
+                            Editar
+                        </button>
+                        <button type="button" class="text-red-600 hover:text-red-800" @click="removerCategoria(categoria)">
+                            <TrashIcon class="h-4 w-4" />
+                        </button>
+                    </div>
+                </li>
+                <li v-if="categorias.length === 0" class="py-2 text-sm text-sidebar-800/60">
+                    Nenhuma categoria cadastrada ainda.
+                </li>
+            </ul>
         </Modal>
     </PainelLayout>
 </template>
