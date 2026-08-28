@@ -1,66 +1,57 @@
+# Só os serviços da aplicação — MySQL e Redis vivem na stack compartilhada
+# "infra" (ver infra/docker-compose.yml), criada uma vez na VPS e usada por
+# todos os projetos. Este compose só entra na rede "infra" pra alcançá-los
+# pelos hostnames mysql/redis.
+
 services:
   app:
     build: .
     restart: unless-stopped
-    depends_on:
-      - mysql
-      - redis
+    mem_limit: 512m
     env_file: .env
     ports:
       - "80"
     volumes:
       - storage:/app/storage
+    networks:
+      - infra
 
   worker:
     build: .
     restart: unless-stopped
+    mem_limit: 512m
     command: php artisan horizon
-    depends_on:
-      - mysql
-      - redis
     env_file: .env
     volumes:
       - storage:/app/storage
+    networks:
+      - infra
 
   scheduler:
     build: .
     restart: unless-stopped
+    mem_limit: 256m
     command: php artisan schedule:work
-    depends_on:
-      - mysql
-      - redis
     env_file: .env
     volumes:
       - storage:/app/storage
+    networks:
+      - infra
 
   reverb:
     build: .
     restart: unless-stopped
+    mem_limit: 256m
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
-    depends_on:
-      - redis
     env_file: .env
     ports:
       - "8080"
+    networks:
+      - infra
 
-  mysql:
-    image: mysql:8.4
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    volumes:
-      - redis_data:/data
+networks:
+  infra:
+    external: true
 
 volumes:
-  mysql_data:
-  redis_data:
   storage:
