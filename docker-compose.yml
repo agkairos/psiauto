@@ -1,7 +1,7 @@
-# Serviços da aplicação. MySQL e Redis NÃO ficam aqui — são recursos nativos
-# do Dokploy (tipo "Database"), criados dentro do mesmo Project pela
-# interface, e o Dokploy já coloca tudo na mesma rede automaticamente. Este
-# compose só precisa do host/porta deles, passados via .env.
+# Serviços da aplicação. MySQL e Redis são recursos nativos do Dokploy (tipo
+# "Database"), e entram sozinhos na rede "dokploy-network" — um compose
+# customizado como este cria sua própria rede isolada por padrão, então
+# precisamos entrar explicitamente na dokploy-network pra alcançá-los.
 
 services:
   app:
@@ -13,6 +13,8 @@ services:
       - "80"
     volumes:
       - storage:/app/storage
+    networks:
+      - dokploy-network
 
   worker:
     build: .
@@ -22,6 +24,8 @@ services:
     env_file: .env
     volumes:
       - storage:/app/storage
+    networks:
+      - dokploy-network
 
   scheduler:
     build: .
@@ -31,6 +35,8 @@ services:
     env_file: .env
     volumes:
       - storage:/app/storage
+    networks:
+      - dokploy-network
 
   reverb:
     build: .
@@ -40,6 +46,12 @@ services:
     env_file: .env
     ports:
       - "8080"
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
 
 volumes:
   storage:
